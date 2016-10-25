@@ -78,7 +78,7 @@ def create_upload_data(content_type, key, acl, bucket=None, cache_control=None,
             "conditions": [
                 {"bucket": bucket},
                 {"acl": acl},
-                ["starts-with", "$key", ''],
+                {"key": key},
                 {"success_action_status": '201'},
                 {"x-amz-credential": '%s/%s/%s/s3/aws4_request' % (
                     access_key,

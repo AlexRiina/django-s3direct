@@ -2,6 +2,8 @@ import json
 
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
+from django.core.files.storage import get_storage_class
+from storages.backends import s3boto, s3boto3
 
 from .utils import create_upload_data, get_s3direct_destinations
 
@@ -17,7 +19,7 @@ def get_upload_params(request):
         data = json.dumps({'error': 'File destination does not exist.'})
         return HttpResponse(data, content_type="application/json", status=400)
 
-    key = dest.get('key')
+    key = dest.get('key')  # note that this should no longer have the location as a prefix
     auth = dest.get('auth')
     allowed = dest.get('allowed')
     acl = dest.get('acl')
@@ -26,6 +28,10 @@ def get_upload_params(request):
     content_disposition = dest.get('content_disposition')
     content_length_range = dest.get('content_length_range')
     server_side_encryption = dest.get('server_side_encryption')
+
+    # defaults to DEFAULT_FILE_STORAGE
+    storage = get_storage_class(dest.get('storage'))()  # django-storages hook
+    assert isinstance(storage, (s3boto.S3BotoStorage, s3boto3.S3Boto3Storage))
 
     if not acl:
         acl = 'public-read'
@@ -45,11 +51,13 @@ def get_upload_params(request):
     if hasattr(key, '__call__'):
         key = key(filename)
     elif key == '/':
-        key = '${filename}'
+        key = filename
     else:
         # The literal string '${filename}' is an S3 field variable for key.
         # https://aws.amazon.com/articles/1434#aws-table
-        key = '%s/${filename}' % key
+        key = '%s/%s' % (key, filename)
+
+    key = storage._normalize_name(storage.get_available_name(key))
 
     data = create_upload_data(
         content_type, key, acl, bucket, cache_control, content_disposition, content_length_range,
