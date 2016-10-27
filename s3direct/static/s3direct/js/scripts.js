@@ -34,7 +34,7 @@
 
     var parseURL = function(text) {
         var xml = new DOMParser().parseFromString(text, 'text/xml'),
-            tag = xml.getElementsByTagName('Location')[0],
+            tag = xml.getElementsByTagName('Key')[0],
             url = tag.childNodes[0].nodeValue
 
         return url;
