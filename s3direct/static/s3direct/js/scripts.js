@@ -134,7 +134,7 @@
             headers  = {'X-CSRFToken': getCookie('csrftoken')}
 
         form.append('type', file.type)
-        form.append('name', file.name)
+        form.append('name', file.name.replace(/ /g, '-'))  // can't assign and just make this work
         form.append('dest', dest)
 
         request('POST', url, form, headers, el, false, function(status, json){
