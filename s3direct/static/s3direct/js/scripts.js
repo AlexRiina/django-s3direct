@@ -125,6 +125,13 @@
         })
     }
 
+
+    var randomChar = function() {
+      // https://www.thepolyglotdeveloper.com/2015/03/create-a-random-nonce-string-using-javascript/
+      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      return possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+
     var getUploadURL = function(e) {
         var el       = e.target.parentElement,
             file     = el.querySelector('.file-input').files[0],
@@ -133,8 +140,11 @@
             form     = new FormData(),
             headers  = {'X-CSRFToken': getCookie('csrftoken')}
 
+        var name = file.name.replace(/[^\u0000-\u007f]/g, randomChar);
+        name = name.replace(/ /g, '-');
+
         form.append('type', file.type)
-        form.append('name', file.name.replace(/ /g, '-'))  // can't assign and just make this work
+        form.append('name', name)
         form.append('dest', dest)
 
         request('POST', url, form, headers, el, false, function(status, json){
